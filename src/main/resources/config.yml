@@ -1,0 +1,12 @@
+config:
+  debug: false
+  # A set of webhook addresses
+  # each address must accept post method
+  # each request that plugin will send is a JSON with following data:
+  # { "playerName": "xxxx", "action": "JOIN" }
+  #
+  # list of currently supported actions:
+  # join
+  # quit
+  webhooks:
+    - "http://localhost:8080/webhook"
