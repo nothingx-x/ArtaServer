@@ -6,6 +6,7 @@ import org.bukkit.event.player.PlayerEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -46,6 +47,15 @@ public class WebhookService {
         sendRequestAsync(request);
     }
 
+    public void notifyStartStop(boolean isStopped) {
+        if (isStopped) {
+            // if stop is true, it means that plugin is disabled. in this case request will be sent synchronously
+            sendRequest(new Request("", Action.STOP));
+        } else {
+            sendRequestAsync(new Request("", Action.START));
+        }
+    }
+
     private void sendRequestAsync(Request requestData) {
         List<CompletableFuture<HttpResponse<Void>>> futures = new ArrayList<>();
         for (String webhook : webhooks) {
@@ -59,9 +69,26 @@ public class WebhookService {
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[]{}));
     }
 
+    private void sendRequest(Request requestData) {
+        for (String webhook : webhooks) {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(webhook))
+                    .POST(HttpRequest.BodyPublishers.ofString(requestData.toJSONString()))
+                    .setHeader("Content-type", "application/json")
+                    .build();
+            try {
+                client.send(request, HttpResponse.BodyHandlers.discarding());
+            } catch (IOException | InterruptedException e) {
+                ArtaPlugin.getInstance().getLogger().severe("Failed to send webhook: " + e.getMessage());
+            }
+        }
+    }
+
     public enum Action {
         JOIN,
-        QUIT
+        QUIT,
+        START,
+        STOP
     }
     public record Request(String playerName, Action action) {
         public String toJSONString() {

@@ -35,7 +35,12 @@ export default {
         const action = data.action;
         const playername = data.playerName;
 
-        const text = `${playername} ${convertActionToPersian(action)}`;
+        let text = "";
+        if (!playername) {
+            text = convertActionToPersian(action)
+        } else {
+            text = `${playername} ${convertActionToPersian(action)}`;
+        }
         try {
 
           const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chat_id}&text=${text}`;

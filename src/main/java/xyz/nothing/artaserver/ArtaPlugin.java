@@ -21,11 +21,13 @@ public class ArtaPlugin extends JavaPlugin {
         webhookService = new WebhookService(webhooks);
         getServer().getPluginManager().registerEvents(new PlayerListener(webhookService), this);
 
+        webhookService.notifyStartStop(false);
         getComponentLogger().info(Component.text("ArtaPlugin enabled!"));
     }
 
     @Override
     public void onDisable() {
+        webhookService.notifyStartStop(true);
         getComponentLogger().info(Component.text("ArtaPlugin disabled!"));
     }
 
