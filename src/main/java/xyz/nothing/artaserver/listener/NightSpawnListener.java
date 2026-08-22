@@ -8,6 +8,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import xyz.nothing.artaserver.util.SafeLocationFinder;
+import xyz.nothing.artaserver.util.TimeOfDay;
 
 import java.util.Random;
 
@@ -31,9 +32,9 @@ public class NightSpawnListener implements Listener {
         World world = event.getLocation().getWorld();
         if (world == null) return;
 
-        // Only at night (time between 13000 and 23000)
-        long time = world.getTime();
-        if (time < 13000 || time > 23000) return;
+        // Only at night
+        TimeOfDay time = TimeOfDay.fromTicks(world.getTime());
+        if (time.isDay()) return;
 
         // Spawn extra monsters
         int extraSpawns = 0;

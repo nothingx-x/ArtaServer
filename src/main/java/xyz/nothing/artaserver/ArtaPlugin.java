@@ -4,6 +4,7 @@ package xyz.nothing.artaserver;
 import net.kyori.adventure.text.Component;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
+import xyz.nothing.artaserver.command.DailyCommand;
 import xyz.nothing.artaserver.command.JobCommand;
 import xyz.nothing.artaserver.db.DatabaseManager;
 import xyz.nothing.artaserver.listener.JobEffects;
@@ -42,12 +43,20 @@ public class ArtaPlugin extends JavaPlugin {
 
         webhookService = new WebhookService(webhooks);
         jobManager = JobManager.getInstance();
+        DailyManager dailyManager = new DailyManager(jobManager);
 
         // commands
         JobCommand jobCommand = new JobCommand(jobManager);
+        DailyCommand dailyCommand = new DailyCommand(dailyManager);
         PluginCommand jobCmd = getCommand("job");
+        PluginCommand dailyCmd = getCommand("daily");
+
         if (jobCmd != null) {
             jobCmd.setExecutor(jobCommand);
+        }
+
+        if (dailyCmd != null) {
+            dailyCmd.setExecutor(dailyCommand);
         }
 
         // listeners
