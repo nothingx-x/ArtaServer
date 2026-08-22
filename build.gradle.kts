@@ -15,6 +15,8 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     paperweight.paperDevBundle("1.21.8-R0.1-SNAPSHOT")
+    compileOnly("com.j256.ormlite:ormlite-jdbc:6.1")
+    compileOnly("org.xerial:sqlite-jdbc:3.45.1.0")
 }
 
 tasks.test {

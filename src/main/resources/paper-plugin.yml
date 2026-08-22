@@ -5,3 +5,9 @@ version: "0.1"
 main: "xyz.nothing.artaserver.ArtaPlugin"
 authors:
   - nothingx-x
+
+commands:
+  job:
+    description: "Choose your job"
+    usage: "/job pick <job>"
+    aliases: [jobs]
