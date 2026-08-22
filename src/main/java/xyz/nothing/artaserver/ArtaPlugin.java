@@ -13,8 +13,11 @@ import xyz.nothing.artaserver.listener.smithman.SmithmanEffects;
 import xyz.nothing.artaserver.job.JobListenerScanner;
 import xyz.nothing.artaserver.job.JobManager;
 import xyz.nothing.artaserver.listener.farmer.FarmerListener;
+import xyz.nothing.artaserver.listener.BreedingListener;
 import xyz.nothing.artaserver.listener.NightDamageListener;
 import xyz.nothing.artaserver.listener.NightSpawnListener;
+import xyz.nothing.artaserver.listener.JobLockListener;
+import xyz.nothing.artaserver.listener.VillagerTradeListener;
 import xyz.nothing.artaserver.listener.smithman.SmithmanListener;
 import xyz.nothing.artaserver.listener.warrior.WarriorListener;
 import xyz.nothing.artaserver.listener.PlayerListener;
@@ -68,6 +71,11 @@ public class ArtaPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new SmithmanListener(jobManager), this);
         getServer().getPluginManager().registerEvents(new NightSpawnListener(), this);
         getServer().getPluginManager().registerEvents(new NightDamageListener(), this);
+        getServer().getPluginManager().registerEvents(new VillagerTradeListener(), this);
+        getServer().getPluginManager().registerEvents(new JobLockListener(), this);
+
+        double breedingCancelChance = getConfig().getDouble("config.breeding-cancel-chance", 0.2);
+        getServer().getPluginManager().registerEvents(new BreedingListener(breedingCancelChance), this);
 
         // Scan @OnJob annotated methods and register as listeners
         JobListenerScanner.scan(this, new FarmerEffects(), jobManager);

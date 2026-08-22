@@ -100,6 +100,13 @@ public class JobListenerScanner {
             if (entity instanceof Player player) return player;
         } catch (Exception ignored) {}
 
+        try {
+            // InventoryEvent.getWhoClicked() -> HumanEntity -> Player
+            Method getWhoClicked = event.getClass().getMethod("getWhoClicked");
+            Object clicker = getWhoClicked.invoke(event);
+            if (clicker instanceof Player player) return player;
+        } catch (Exception ignored) {}
+
         return null;
     }
 }

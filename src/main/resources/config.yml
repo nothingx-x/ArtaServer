@@ -1,5 +1,7 @@
 config:
   debug: false
+  # Chance to cancel animal breeding (0.0 = never cancel, 1.0 = always cancel)
+  breeding-cancel-chance: 0.2
   # A set of webhook addresses
   # each address must accept post method
   # each request that plugin will send is a JSON with following data:

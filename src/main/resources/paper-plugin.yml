@@ -3,6 +3,7 @@ description: ""
 api-version: "1.20"
 version: "0.1"
 main: "xyz.nothing.artaserver.ArtaPlugin"
+loader: "xyz.nothing.artaserver.ArtaPluginLoader"
 authors:
   - nothingx-x
 
