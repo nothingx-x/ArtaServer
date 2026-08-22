@@ -10,6 +10,8 @@ import xyz.nothing.artaserver.listener.JobEffects;
 import xyz.nothing.artaserver.job.JobListenerScanner;
 import xyz.nothing.artaserver.job.JobManager;
 import xyz.nothing.artaserver.listener.FarmerListener;
+import xyz.nothing.artaserver.listener.NightDamageListener;
+import xyz.nothing.artaserver.listener.NightSpawnListener;
 import xyz.nothing.artaserver.listener.SmithmanListener;
 import xyz.nothing.artaserver.listener.WarriorListener;
 import xyz.nothing.artaserver.listener.PlayerListener;
@@ -53,6 +55,8 @@ public class ArtaPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new FarmerListener(jobManager), this);
         getServer().getPluginManager().registerEvents(new WarriorListener(jobManager), this);
         getServer().getPluginManager().registerEvents(new SmithmanListener(jobManager), this);
+        getServer().getPluginManager().registerEvents(new NightSpawnListener(), this);
+        getServer().getPluginManager().registerEvents(new NightDamageListener(), this);
 
         // Scan @OnJob annotated methods and register as listeners
         JobListenerScanner.scan(this, new JobEffects(), jobManager);
