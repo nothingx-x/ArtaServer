@@ -11,3 +11,6 @@ commands:
     description: "Choose your job"
     usage: "/job pick <job>"
     aliases: [jobs]
+  daily:
+    description: "Claim your daily reward"
+    usage: "/daily"
