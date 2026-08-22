@@ -4,6 +4,8 @@ import xyz.nothing.artaserver.ArtaPlugin;
 import xyz.nothing.artaserver.db.DatabaseManager;
 import xyz.nothing.artaserver.db.PlayerJobEntity;
 
+import org.bukkit.entity.Player;
+
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
@@ -47,6 +49,23 @@ public class JobManager {
         }
 
         return true;
+    }
+
+    /**
+     * Grant XP to a player, save progress, and send feedback messages.
+     */
+    public void grantXp(Player player, int xp) {
+        PlayerJobData data = playerJobs.get(player.getUniqueId());
+        if (data == null) return;
+
+        int levelsGained = data.addXp(xp);
+        saveProgress(player.getUniqueId());
+
+        JobMessageUtil.sendXpMessage(player, xp, data);
+
+        if (levelsGained > 0) {
+            JobMessageUtil.sendLevelUpMessage(player, data);
+        }
     }
 
     /**

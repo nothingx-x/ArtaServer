@@ -7,14 +7,16 @@ import org.bukkit.plugin.java.JavaPlugin;
 import xyz.nothing.artaserver.command.DailyCommand;
 import xyz.nothing.artaserver.command.JobCommand;
 import xyz.nothing.artaserver.db.DatabaseManager;
-import xyz.nothing.artaserver.listener.JobEffects;
+import xyz.nothing.artaserver.listener.farmer.FarmerEffects;
+import xyz.nothing.artaserver.listener.warrior.WarriorEffects;
+import xyz.nothing.artaserver.listener.smithman.SmithmanEffects;
 import xyz.nothing.artaserver.job.JobListenerScanner;
 import xyz.nothing.artaserver.job.JobManager;
-import xyz.nothing.artaserver.listener.FarmerListener;
+import xyz.nothing.artaserver.listener.farmer.FarmerListener;
 import xyz.nothing.artaserver.listener.NightDamageListener;
 import xyz.nothing.artaserver.listener.NightSpawnListener;
-import xyz.nothing.artaserver.listener.SmithmanListener;
-import xyz.nothing.artaserver.listener.WarriorListener;
+import xyz.nothing.artaserver.listener.smithman.SmithmanListener;
+import xyz.nothing.artaserver.listener.warrior.WarriorListener;
 import xyz.nothing.artaserver.listener.PlayerListener;
 
 import java.sql.SQLException;
@@ -68,7 +70,9 @@ public class ArtaPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new NightDamageListener(), this);
 
         // Scan @OnJob annotated methods and register as listeners
-        JobListenerScanner.scan(this, new JobEffects(), jobManager);
+        JobListenerScanner.scan(this, new FarmerEffects(), jobManager);
+        JobListenerScanner.scan(this, new WarriorEffects(), jobManager);
+        JobListenerScanner.scan(this, new SmithmanEffects(), jobManager);
 
         webhookService.notifyStartStop(false);
         getComponentLogger().info(Component.text("ArtaPlugin enabled!"));

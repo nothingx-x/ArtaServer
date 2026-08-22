@@ -27,6 +27,10 @@ public enum JobType {
         return icon;
     }
 
+    public NamedTextColor getColor() {
+        return color;
+    }
+
     public Component getComponent() {
         return Component.text(displayName, color);
     }
