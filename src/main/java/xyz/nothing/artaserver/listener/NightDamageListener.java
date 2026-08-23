@@ -31,7 +31,6 @@ public class NightDamageListener implements Listener {
         LivingEntity damager = (LivingEntity) event.getDamager();
 
         World world = player.getWorld();
-        if (world == null) return;
         if (world.getEnvironment() != World.Environment.NORMAL) return;
 
         TimeOfDay time = TimeOfDay.fromTicks(world.getTime());

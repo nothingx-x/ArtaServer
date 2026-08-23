@@ -5,17 +5,16 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import xyz.nothing.artaserver.db.DailyClaimEntity;
+import xyz.nothing.artaserver.db.DatabaseManager;
 import xyz.nothing.artaserver.job.JobManager;
 import xyz.nothing.artaserver.job.JobType;
 import xyz.nothing.artaserver.job.PlayerJobData;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 public class DailyManager {
     private final JobManager jobManager;
-    private final Map<UUID, Long> lastClaim = new HashMap<>();
 
     private static final long COOLDOWN_MS = 24 * 60 * 60 * 1000L; // 24 hours
 
@@ -36,16 +35,21 @@ public class DailyManager {
 
         // Check cooldown
         UUID uuid = player.getUniqueId();
-        Long last = lastClaim.get(uuid);
-        if (last != null) {
-            long elapsed = System.currentTimeMillis() - last;
-            if (elapsed < COOLDOWN_MS) {
-                long remaining = COOLDOWN_MS - elapsed;
-                long hours = remaining / (1000 * 60 * 60);
-                long minutes = (remaining % (1000 * 60 * 60)) / (1000 * 60);
-                player.sendMessage(Component.text("You already claimed today! Come back in " + hours + "h " + minutes + "m.", NamedTextColor.RED));
-                return false;
+        try {
+            DailyClaimEntity claim = DatabaseManager.getInstance().getDailyClaimDao().queryById(uuid);
+            if (claim != null) {
+                long elapsed = System.currentTimeMillis() - claim.getLastClaimTime();
+                if (elapsed < COOLDOWN_MS) {
+                    long remaining = COOLDOWN_MS - elapsed;
+                    long hours = remaining / (1000 * 60 * 60);
+                    long minutes = (remaining % (1000 * 60 * 60)) / (1000 * 60);
+                    player.sendMessage(Component.text("You already claimed today! Come back in " + hours + "h " + minutes + "m.", NamedTextColor.RED));
+                    return false;
+                }
             }
+        } catch (Exception e) {
+            ArtaPlugin.getInstance().getLogger().severe("Could not check daily claim: " + e.getMessage());
+            return false;
         }
 
         // Build reward items
@@ -72,7 +76,14 @@ public class DailyManager {
             player.getInventory().addItem(item);
         }
 
-        lastClaim.put(uuid, System.currentTimeMillis());
+        // Save claim time to database
+        try {
+            DailyClaimEntity claim = DatabaseManager.getInstance().getDailyClaimDao().getOrCreate(uuid);
+            claim.setLastClaimTime(System.currentTimeMillis());
+            DatabaseManager.getInstance().getDailyClaimDao().save(claim);
+        } catch (Exception e) {
+            ArtaPlugin.getInstance().getLogger().severe("Could not save daily claim: " + e.getMessage());
+        }
 
         // Feedback
         player.sendMessage(Component.empty());

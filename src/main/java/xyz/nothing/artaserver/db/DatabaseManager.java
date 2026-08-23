@@ -12,6 +12,7 @@ public class DatabaseManager {
     private static DatabaseManager instance;
     private ConnectionSource connectionSource;
     private JdbcPlayerJobDao playerJobDao;
+    private JdbcDailyClaimDao dailyClaimDao;
 
     private DatabaseManager() {
     }
@@ -34,13 +35,19 @@ public class DatabaseManager {
         connectionSource = new JdbcConnectionSource(url);
 
         TableUtils.createTableIfNotExists(connectionSource, PlayerJobEntity.class);
+        TableUtils.createTableIfNotExists(connectionSource, DailyClaimEntity.class);
         playerJobDao = new JdbcPlayerJobDao(connectionSource);
+        dailyClaimDao = new JdbcDailyClaimDao(connectionSource);
 
         ArtaPlugin.getInstance().getLogger().info("Database initialized: " + dbFile.getAbsolutePath());
     }
 
     public JdbcPlayerJobDao getPlayerJobDao() {
         return playerJobDao;
+    }
+
+    public JdbcDailyClaimDao getDailyClaimDao() {
+        return dailyClaimDao;
     }
 
     /**

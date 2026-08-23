@@ -11,6 +11,7 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import xyz.nothing.artaserver.job.JobManager;
 
@@ -19,7 +20,15 @@ import xyz.nothing.artaserver.job.JobManager;
  */
 public class JobLockListener implements Listener {
     private static final Component LOCKED_MESSAGE = Component.text("You must pick a job first! Use /job pick <job>", NamedTextColor.RED);
+    private static final Component JOIN_MESSAGE = Component.text("Select your job using /job pick", NamedTextColor.RED);
 
+    @EventHandler
+    public void onJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+        if (hasJob(player)) return;
+        player.sendMessage(JOIN_MESSAGE);
+        player.sendActionBar(JOIN_MESSAGE);
+    }
     @EventHandler
     public void onDamage(EntityDamageEvent event) {
         if (!(event.getEntity() instanceof Player player)) return;

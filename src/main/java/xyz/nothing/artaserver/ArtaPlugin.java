@@ -2,8 +2,13 @@ package xyz.nothing.artaserver;
 
 
 import net.kyori.adventure.text.Component;
-import org.bukkit.command.PluginCommand;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import xyz.nothing.artaserver.command.DailyCommand;
 import xyz.nothing.artaserver.command.JobCommand;
 import xyz.nothing.artaserver.db.DatabaseManager;
@@ -51,18 +56,8 @@ public class ArtaPlugin extends JavaPlugin {
         DailyManager dailyManager = new DailyManager(jobManager);
 
         // commands
-        JobCommand jobCommand = new JobCommand(jobManager);
-        DailyCommand dailyCommand = new DailyCommand(dailyManager);
-        PluginCommand jobCmd = getCommand("job");
-        PluginCommand dailyCmd = getCommand("daily");
-
-        if (jobCmd != null) {
-            jobCmd.setExecutor(jobCommand);
-        }
-
-        if (dailyCmd != null) {
-            dailyCmd.setExecutor(dailyCommand);
-        }
+        registerCommand("job", "Choose your job", "/job pick <job>", new JobCommand(jobManager));
+        registerCommand("daily", "Claim your daily reward", "/daily", new DailyCommand(dailyManager));
 
         // listeners
         getServer().getPluginManager().registerEvents(new PlayerListener(webhookService), this);
@@ -99,5 +94,23 @@ public class ArtaPlugin extends JavaPlugin {
 
     public static ArtaPlugin getInstance() {
         return instance;
+    }
+
+    private void registerCommand(String name, String description, String usage, Object executor) {
+        Command command = new Command(name, description, usage, List.of()) {
+            @Override
+            public boolean execute(@NonNull CommandSender sender, @NonNull String commandLabel, @NonNull String[] args) {
+                return ((CommandExecutor) executor).onCommand(sender, this, commandLabel, args);
+            }
+
+            @Override
+            public java.util.@Nullable List<String> tabComplete(@NonNull CommandSender sender, @NonNull String alias, @NonNull String[] args) {
+                if (executor instanceof TabCompleter tabCompleter) {
+                    return tabCompleter.onTabComplete(sender, this, alias, args);
+                }
+                return super.tabComplete(sender, alias, args);
+            }
+        };
+        getServer().getCommandMap().register("artaserver", command);
     }
 }

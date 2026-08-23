@@ -44,39 +44,39 @@ public class WarriorEffects {
             Material.NETHERITE_SWORD, Material.NETHERITE_PICKAXE, Material.NETHERITE_AXE, Material.NETHERITE_SHOVEL, Material.NETHERITE_HOE
     );
 
-    @OnJob(JobType.WARRIOR)
-    public void onWarriorCraft(CraftItemEvent event) {
-        Player player = (Player) event.getWhoClicked();
-        ItemStack result = event.getRecipe().getResult();
-        Inventory craftGrid = event.getInventory();
-        Location loc = player.getLocation();
-
-        // 20% chance to break tool on craft
-        if (TOOLS.contains(result.getType()) && Math.random() < TOOL_CRAFT_BREAK_CHANCE) {
-            event.setCancelled(true);
-            player.sendMessage(Component.text("Your tool broke while crafting!", NamedTextColor.RED));
-
-            // Drop 40% of ore ingredients
-            boolean droppedAny = false;
-            for (int i = 0; i < craftGrid.getSize(); i++) {
-                ItemStack slot = craftGrid.getItem(i);
-                if (slot == null || !ORES.contains(slot.getType())) continue;
-
-                int amount = slot.getAmount();
-                int lost = (int) Math.ceil(amount * ORE_CRAFT_DROP_LOSS);
-                if (lost < 1 && Math.random() < ORE_CRAFT_DROP_LOSS) lost = 1;
-                if (lost < 1) continue;
-
-                ItemStack dropped = slot.clone();
-                dropped.setAmount(lost);
-                loc.getWorld().dropItemNaturally(loc, dropped);
-                droppedAny = true;
-            }
-            if (droppedAny) {
-                player.sendActionBar(Component.text("Some ores were dropped while crafting!", NamedTextColor.YELLOW));
-            }
-        }
-    }
+//    @OnJob(JobType.WARRIOR)
+//    public void onWarriorCraft(CraftItemEvent event) {
+//        Player player = (Player) event.getWhoClicked();
+//        ItemStack result = event.getRecipe().getResult();
+//        Inventory craftGrid = event.getInventory();
+//        Location loc = player.getLocation();
+//
+//        // 20% chance to break tool on craft
+//        if (TOOLS.contains(result.getType()) && Math.random() < TOOL_CRAFT_BREAK_CHANCE) {
+//            event.setCancelled(true);
+//            player.sendMessage(Component.text("Your tool broke while crafting!", NamedTextColor.RED));
+//
+//            // Drop 40% of ore ingredients
+//            boolean droppedAny = false;
+//            for (int i = 0; i < craftGrid.getSize(); i++) {
+//                ItemStack slot = craftGrid.getItem(i);
+//                if (slot == null || !ORES.contains(slot.getType())) continue;
+//
+//                int amount = slot.getAmount();
+//                int lost = (int) Math.ceil(amount * ORE_CRAFT_DROP_LOSS);
+//                if (lost < 1 && Math.random() < ORE_CRAFT_DROP_LOSS) lost = 1;
+//                if (lost < 1) continue;
+//
+//                ItemStack dropped = slot.clone();
+//                dropped.setAmount(lost);
+//                loc.getWorld().dropItemNaturally(loc, dropped);
+//                droppedAny = true;
+//            }
+//            if (droppedAny) {
+//                player.sendActionBar(Component.text("Some ores were dropped while crafting!", NamedTextColor.YELLOW));
+//            }
+//        }
+//    }
 
     @OnJob(JobType.WARRIOR)
     public void onWarriorHostileDamage(EntityDamageByEntityEvent event) {

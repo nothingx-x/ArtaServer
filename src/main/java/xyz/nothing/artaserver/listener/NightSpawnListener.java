@@ -14,15 +14,19 @@ import java.util.Random;
 
 public class NightSpawnListener implements Listener {
     private final Random random = new Random();
+    private boolean spawning = false;
 
     // Chance to spawn an extra monster
-    private static final double EXTRA_SPAWN_CHANCE = 0.7;
+    private static final double EXTRA_SPAWN_CHANCE = 0.4;
 
     // Max extra monsters per spawn event
-    private static final int MAX_EXTRA_SPAWNS = 4;
+    private static final int MAX_EXTRA_SPAWNS = 2;
 
     @EventHandler
     public void onCreatureSpawn(CreatureSpawnEvent event) {
+        // Prevent re-entrance from our own extra spawns
+        if (spawning) return;
+
         // Only trigger for natural spawns
         if (event.getSpawnReason() != CreatureSpawnEvent.SpawnReason.NATURAL) return;
 
@@ -37,20 +41,25 @@ public class NightSpawnListener implements Listener {
         if (time.isDay()) return;
 
         // Spawn extra monsters
-        int extraSpawns = 0;
-        for (int i = 0; i < MAX_EXTRA_SPAWNS; i++) {
-            if (random.nextDouble() < EXTRA_SPAWN_CHANCE) {
-                Location loc = SafeLocationFinder.findSafeLocation(event.getLocation(), 15);
-                if (loc != null) {
-                    world.spawnEntity(loc, event.getEntityType(), CreatureSpawnEvent.SpawnReason.NATURAL);
-                    extraSpawns++;
+        spawning = true;
+        try {
+            int extraSpawns = 0;
+            for (int i = 0; i < MAX_EXTRA_SPAWNS; i++) {
+                if (random.nextDouble() < EXTRA_SPAWN_CHANCE) {
+                    Location loc = SafeLocationFinder.findSafeLocation(event.getLocation(), 15);
+                    if (loc != null) {
+                        world.spawnEntity(loc, event.getEntityType(), CreatureSpawnEvent.SpawnReason.CUSTOM);
+                        extraSpawns++;
+                    }
                 }
             }
-        }
 
-        if (extraSpawns > 0) {
-            event.getEntity().getServer().getLogger().fine(
-                    "Night spawn: " + extraSpawns + " extra " + event.getEntityType().name() + " at " + event.getLocation().getBlockX() + "," + event.getLocation().getBlockZ());
+            if (extraSpawns > 0) {
+                event.getEntity().getServer().getLogger().fine(
+                        "Night spawn: " + extraSpawns + " extra " + event.getEntityType().name() + " at " + event.getLocation().getBlockX() + "," + event.getLocation().getBlockZ());
+            }
+        } finally {
+            spawning = false;
         }
     }
 

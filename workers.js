@@ -24,9 +24,9 @@ export default {
             case "QUIT":
               return "خارج شد ❌";
             case "START":
-              return "شروع شد 🚀";
+              return "روشن شد 🚀";
             case "STOP":
-              return "متوقف شد ⏹️";
+              return "خاموش شد ⏹️";
             default:
               return action || "نامشخص";
           }

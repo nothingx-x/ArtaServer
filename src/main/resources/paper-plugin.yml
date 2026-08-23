@@ -6,12 +6,3 @@ main: "xyz.nothing.artaserver.ArtaPlugin"
 loader: "xyz.nothing.artaserver.ArtaPluginLoader"
 authors:
   - nothingx-x
-
-commands:
-  job:
-    description: "Choose your job"
-    usage: "/job pick <job>"
-    aliases: [jobs]
-  daily:
-    description: "Claim your daily reward"
-    usage: "/daily"
