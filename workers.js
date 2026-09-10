@@ -53,6 +53,9 @@ export default {
         else if (action === "CHAT") {
           text = `<b>CHAT</b> ${playername}:\n\n${convertActionToPersian(action)}`
         }
+        else if (action === "AURA_LEVEL_UP") {
+          text = `<b>SKILL</b> ${playername}:\n\n${convertActionToPersian(action)}`
+        }
         else {
           text = `${playername} ${convertActionToPersian(action)}`;
         }
