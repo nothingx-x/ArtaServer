@@ -10,4 +10,4 @@ dependencies:
     AuraSkills:
       required: false
       join-classpath: true
-      load: AFTER
+      load: BEFORE
