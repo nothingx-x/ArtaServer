@@ -8,8 +8,8 @@ export default {
 
     if (!token || !chat_id) {
       return new Response(
-        "Configure BOT_TOKEN and CHAT_ID environment variables",
-        { status: 400 },
+          "Configure BOT_TOKEN and CHAT_ID environment variables",
+          { status: 400 },
       );
     }
 
@@ -17,6 +17,11 @@ export default {
     if (url.pathname === "/webhook" && request.method === "POST") {
       try {
         const data = await request.json();
+        const escapeHtml = (s) => String(s)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+
         const convertActionToPersian = (action) => {
           switch (action) {
             case "JOIN":
@@ -28,8 +33,7 @@ export default {
             case "STOP":
               return "سرور خاموش شد ⏹️";
             case "CHAT":
-              const message = data.message;
-              return `\n پیام:${message}`
+              return escapeHtml(data.message)
             default:
               return action || "نامشخص";
           }
@@ -40,15 +44,22 @@ export default {
 
         let text = "";
         if (!playername) {
-            text = convertActionToPersian(action)
-        } else {
-            text = `${playername} ${convertActionToPersian(action)}`;
+          text = convertActionToPersian(action)
+        }
+        else if (action === "CHAT") {
+          text = `<b>CHAT</b> ${playername}:\n\n${convertActionToPersian(action)}`
+        }
+        else {
+          text = `${playername} ${convertActionToPersian(action)}`;
         }
         try {
 
-          const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chat_id}&text=${text}`;
+          const url = new URL(`https://api.telegram.org/bot${token}/sendMessage`);
+          url.searchParams.set("chat_id", chat_id);
+          url.searchParams.set("parse_mode", "html");
+          url.searchParams.set("text", text);
           const result = await fetch(url);
-          if (result.status != 200) {
+          if (result.status !== 200) {
             return new Response(`Error while sending to telegram ${result.statusText}`, {status: 400})
           }
         } catch(error) {
