@@ -24,9 +24,12 @@ export default {
             case "QUIT":
               return "خارج شد ❌";
             case "START":
-              return "روشن شد 🚀";
+              return "سرور روشن شد 🚀";
             case "STOP":
-              return "خاموش شد ⏹️";
+              return "سرور خاموش شد ⏹️";
+            case "CHAT":
+              const message = data.message;
+              return `\n پیام:${message}`
             default:
               return action || "نامشخص";
           }

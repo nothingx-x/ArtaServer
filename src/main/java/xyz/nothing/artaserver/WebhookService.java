@@ -2,6 +2,9 @@ package xyz.nothing.artaserver;
 
 
 import ca.spottedleaf.concurrentutil.completable.Completable;
+import io.papermc.paper.event.player.AsyncChatEvent;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.event.player.PlayerChatEvent;
 import org.bukkit.event.player.PlayerEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -33,15 +36,18 @@ public class WebhookService {
         Class<? extends PlayerEvent> clazz = event.getClass();
         Request request;
         if (clazz == PlayerJoinEvent.class) {
-            request = new Request(playerName, Action.JOIN);
+            request = new GeneralRequest(playerName, Action.JOIN);
         } else if (clazz == PlayerQuitEvent.class) {
-            request = new Request(playerName, Action.QUIT);
-        } else {
+            request = new GeneralRequest(playerName, Action.QUIT);
+        } else if (clazz == AsyncChatEvent.class) {
+            request = new ChatRequest(playerName, Action.CHAT, PlainTextComponentSerializer.plainText().serialize(((AsyncChatEvent) event).message()));
+        }
+        else {
             return;
         }
 
         if (ArtaPlugin.isDebug()) {
-            ArtaPlugin.getInstance().getLogger().info("notifyPlayerEvent player: " + request.playerName + ", action: " + request.action);
+            ArtaPlugin.getInstance().getLogger().info("notifyPlayerEvent player: " + request.playerName() + ", action: " + request.action());
         }
 
         sendRequestAsync(request);
@@ -50,9 +56,9 @@ public class WebhookService {
     public void notifyStartStop(boolean isStopped) {
         if (isStopped) {
             // if stop is true, it means that plugin is disabled. in this case request will be sent synchronously
-            sendRequest(new Request("", Action.STOP));
+            sendRequest(new GeneralRequest("", Action.STOP));
         } else {
-            sendRequestAsync(new Request("", Action.START));
+            sendRequestAsync(new GeneralRequest("", Action.START));
         }
     }
 
@@ -88,11 +94,29 @@ public class WebhookService {
         JOIN,
         QUIT,
         START,
-        STOP
+        STOP,
+        CHAT
     }
-    public record Request(String playerName, Action action) {
-        public String toJSONString() {
-          return String.format("{\"playerName\":\"%s\", \"action\":\"%s\"}", playerName, action);
-        };
+
+    public interface Request {
+        String playerName();
+        Action action();
+        String toJSONString();
     }
+
+    public record GeneralRequest(String playerName, Action action) implements Request {
+
+        @Override
+            public String toJSONString() {
+                return String.format("{\"playerName\":\"%s\", \"action\":\"%s\"}", playerName, action);
+            }
+        }
+
+    public record ChatRequest(String playerName, Action action, String message) implements Request {
+
+        @Override
+            public String toJSONString() {
+                return String.format("{\"playerName\":\"%s\", \"action\":\"%s\", \"message\":\"%s\"}", playerName, action, message);
+            }
+        }
 }
