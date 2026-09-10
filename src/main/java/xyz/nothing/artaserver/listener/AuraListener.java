@@ -15,6 +15,6 @@ public class AuraListener implements Listener {
 
     @EventHandler
     public void onSkillLevelUp(SkillLevelUpEvent event) {
-        webhookService.notifyAurakills(event);
+        webhookService.notifyAuraSkills(event);
     }
 }

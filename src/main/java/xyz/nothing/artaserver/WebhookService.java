@@ -53,7 +53,7 @@ public class WebhookService {
         sendRequestAsync(request);
     }
 
-    public void notifyAurakills(Event event) {
+    public void notifyAuraSkills(Event event) {
         if (!ArtaPlugin.getInstance().isAuraSkillEnabled()) {
             return;
         }
