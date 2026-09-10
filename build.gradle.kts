@@ -15,6 +15,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     paperweight.paperDevBundle("1.21.8-R0.1-SNAPSHOT")
+    compileOnly("dev.aurelium:auraskills-api-bukkit:2.2.4")
 }
 
 tasks.test {

@@ -34,6 +34,10 @@ export default {
               return "سرور خاموش شد ⏹️";
             case "CHAT":
               return escapeHtml(data.message)
+            case "AURA_LEVEL_UP":
+              const level = data.level;
+              const displayName = data.displayName;
+              return `مهارت ${displayName} به سطح ${level} رسید`;
             default:
               return action || "نامشخص";
           }

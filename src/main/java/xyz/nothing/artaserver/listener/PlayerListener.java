@@ -1,6 +1,7 @@
 package xyz.nothing.artaserver.listener;
 
 
+import dev.aurelium.auraskills.api.event.skill.SkillLevelUpEvent;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;

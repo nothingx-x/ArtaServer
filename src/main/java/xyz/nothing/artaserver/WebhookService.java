@@ -1,10 +1,10 @@
 package xyz.nothing.artaserver;
 
 
-import ca.spottedleaf.concurrentutil.completable.Completable;
+import dev.aurelium.auraskills.api.event.skill.SkillLevelUpEvent;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
-import org.bukkit.event.player.PlayerChatEvent;
+import org.bukkit.event.Event;
 import org.bukkit.event.player.PlayerEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -18,12 +18,13 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
 
 public class WebhookService {
     private final List<String> webhooks;
     private final HttpClient client;
+
     public WebhookService(List<String> webhooks) {
         this.webhooks = webhooks;
         client = HttpClient.newBuilder()
@@ -41,13 +42,27 @@ public class WebhookService {
             request = new GeneralRequest(playerName, Action.QUIT);
         } else if (clazz == AsyncChatEvent.class) {
             request = new ChatRequest(playerName, Action.CHAT, PlainTextComponentSerializer.plainText().serialize(((AsyncChatEvent) event).message()));
-        }
-        else {
+        } else {
             return;
         }
 
         if (ArtaPlugin.isDebug()) {
             ArtaPlugin.getInstance().getLogger().info("notifyPlayerEvent player: " + request.playerName() + ", action: " + request.action());
+        }
+
+        sendRequestAsync(request);
+    }
+
+    public void notifyAurakills(Event event) {
+        if (!ArtaPlugin.getInstance().isAuraSkillEnabled()) {
+            return;
+        }
+
+        Request request;
+        if (event instanceof SkillLevelUpEvent e) {
+            request = new SkillLevelUpRequest(e.getPlayer().getName(), Action.AURA_LEVEL_UP, e.getLevel(), e.getSkill().getDisplayName(Locale.ENGLISH));
+        } else {
+            return;
         }
 
         sendRequestAsync(request);
@@ -95,28 +110,39 @@ public class WebhookService {
         QUIT,
         START,
         STOP,
-        CHAT
+        CHAT,
+        AURA_LEVEL_UP
     }
 
     public interface Request {
         String playerName();
+
         Action action();
+
         String toJSONString();
     }
 
     public record GeneralRequest(String playerName, Action action) implements Request {
 
         @Override
-            public String toJSONString() {
-                return String.format("{\"playerName\":\"%s\", \"action\":\"%s\"}", playerName, action);
-            }
+        public String toJSONString() {
+            return String.format("{\"playerName\":\"%s\", \"action\":\"%s\"}", playerName, action);
         }
+    }
 
     public record ChatRequest(String playerName, Action action, String message) implements Request {
 
         @Override
-            public String toJSONString() {
-                return String.format("{\"playerName\":\"%s\", \"action\":\"%s\", \"message\":\"%s\"}", playerName, action, message);
-            }
+        public String toJSONString() {
+            return String.format("{\"playerName\":\"%s\", \"action\":\"%s\", \"message\":\"%s\"}", playerName, action, message);
         }
+    }
+
+    public record SkillLevelUpRequest(String playerName, Action action, int level, String displayName) implements Request {
+
+        @Override
+        public String toJSONString() {
+            return String.format("{\"playerName\":\"%s\", \"action\":\"%s\", \"displayName\":\"%s\", \"level\":%d}", playerName, action, displayName, level);
+        }
+    }
 }

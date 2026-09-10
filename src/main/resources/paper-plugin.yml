@@ -5,3 +5,9 @@ version: "0.1"
 main: "xyz.nothing.artaserver.ArtaPlugin"
 authors:
   - nothingx-x
+dependencies:
+  server:
+    AuraSkills:
+      required: false
+      join-classpath: true
+      load: AFTER

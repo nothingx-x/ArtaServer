@@ -2,7 +2,9 @@ package xyz.nothing.artaserver;
 
 
 import net.kyori.adventure.text.Component;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
+import xyz.nothing.artaserver.listener.AuraListener;
 import xyz.nothing.artaserver.listener.PlayerListener;
 
 import java.util.List;
@@ -16,10 +18,15 @@ public class ArtaPlugin extends JavaPlugin {
     public void onEnable() {
         instance = this;
         saveDefaultConfig();
+
         List<String> webhooks = getConfig().getStringList("config.webhooks");
         debug = getConfig().getBoolean("config.debug");
+
         webhookService = new WebhookService(webhooks);
         getServer().getPluginManager().registerEvents(new PlayerListener(webhookService), this);
+        if (isAuraSkillEnabled()) {
+            getServer().getPluginManager().registerEvents(new AuraListener(webhookService), this);
+        }
 
         webhookService.notifyStartStop(false);
         getComponentLogger().info(Component.text("ArtaPlugin enabled!"));
@@ -29,6 +36,11 @@ public class ArtaPlugin extends JavaPlugin {
     public void onDisable() {
         webhookService.notifyStartStop(true);
         getComponentLogger().info(Component.text("ArtaPlugin disabled!"));
+    }
+
+    public boolean isAuraSkillEnabled() {
+        Plugin plugin = getServer().getPluginManager().getPlugin("Aurakills");
+        return plugin != null && plugin.isEnabled();
     }
 
     public static boolean isDebug() {
