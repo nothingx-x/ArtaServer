@@ -39,7 +39,7 @@ public class ArtaPlugin extends JavaPlugin {
     }
 
     public boolean isAuraSkillEnabled() {
-        Plugin plugin = getServer().getPluginManager().getPlugin("Aurakills");
+        Plugin plugin = getServer().getPluginManager().getPlugin("AuraSkills");
         return plugin != null && plugin.isEnabled();
     }
 
