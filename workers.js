@@ -59,7 +59,7 @@ export default {
           text = `<b>SKILL</b> ${playername}:\n\n${convertActionToPersian(action)}`
         }
         else if (action === "HEALTH_REPORT") {
-          text `<b>HEALTH REPORT</b>\n\n${convertActionToPersian(action)}`
+          text = `<b>HEALTH REPORT</b>\n\n${convertActionToPersian(action)}`
         }
         else {
           text = `${playername} ${convertActionToPersian(action)}`;
