@@ -49,8 +49,8 @@ export default {
         const playername = data.playerName;
 
         let text = "";
-        if (!playername) {
-          text = convertActionToPersian(action)
+        if (action === "HEALTH_REPORT") {
+          text = `<b>HEALTH REPORT</b>\n\n${convertActionToPersian(action)}`
         }
         else if (action === "CHAT") {
           text = `<b>CHAT</b> ${playername}:\n\n${convertActionToPersian(action)}`
@@ -58,8 +58,8 @@ export default {
         else if (action === "AURA_LEVEL_UP") {
           text = `<b>SKILL</b> ${playername}:\n\n${convertActionToPersian(action)}`
         }
-        else if (action === "HEALTH_REPORT") {
-          text = `<b>HEALTH REPORT</b>\n\n${convertActionToPersian(action)}`
+        else if (!playername) {
+          text = convertActionToPersian(action)
         }
         else {
           text = `${playername} ${convertActionToPersian(action)}`;

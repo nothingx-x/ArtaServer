@@ -33,7 +33,7 @@ public class ArtaPlugin extends JavaPlugin {
 
         webhookService.notifyStartStop(false);
         healthReportService.init();
-        getServer().getScheduler().scheduleSyncRepeatingTask(this, healthReportService::run, 0L, 1 * 60 * 20);
+        getServer().getScheduler().scheduleSyncRepeatingTask(this, healthReportService::run, 1 * 60 * 20L, 1 * 60 * 20);
         getComponentLogger().info(Component.text("ArtaPlugin enabled!"));
     }
 

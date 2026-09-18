@@ -71,7 +71,7 @@ public class WebhookService {
             builder.append(entity.getValue());
             builder.append("\n");
         }
-        builder.append("\n\n");
+        builder.append("\n");
         builder.append("TPS: ")
                 .append(e.getHealthReport().tps());
 

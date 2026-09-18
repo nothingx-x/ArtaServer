@@ -36,9 +36,13 @@ public class HealthReportService {
         if (stopped) return;
         var elapsed = Duration.between(lastCheck, Instant.now());
         if (elapsed.toMillis() < interval.toMillis()) {
+            if (ArtaPlugin.isDebug()) {
+                ArtaPlugin.getInstance().getLogger().info("Health report skipped: " + elapsed.toMinutes() + "/" + interval.toMinutes() + " minutes elapsed");
+            }
             return;
         }
 
+        ArtaPlugin.getInstance().getLogger().info("Health report fired!");
         lastCheck = Instant.now();
         config.set("health_report.last_check_ms", lastCheck.toEpochMilli());
         try {
