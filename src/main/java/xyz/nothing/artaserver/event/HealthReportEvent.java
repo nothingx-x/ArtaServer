@@ -1,6 +1,5 @@
 package xyz.nothing.artaserver.event;
 
-
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
@@ -21,6 +20,10 @@ public class HealthReportEvent extends Event {
 
     @Override
     public @NotNull HandlerList getHandlers() {
+        return HANDLERS;
+    }
+
+    public static HandlerList getHandlerList() {
         return HANDLERS;
     }
 }

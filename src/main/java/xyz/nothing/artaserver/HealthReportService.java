@@ -27,8 +27,8 @@ public class HealthReportService {
 
     public void init() {
         config = YamlConfiguration.loadConfiguration(file);
-        long intervalMinutes = config.getLong("interval_minute");
-        lastCheck = Instant.ofEpochMilli(config.getLong("last_check_ms"));
+        long intervalMinutes = config.getLong("health_report.interval_minute");
+        lastCheck = Instant.ofEpochMilli(config.getLong("health_report.last_check_ms"));
         interval = Duration.ofMinutes(intervalMinutes);
     }
 
@@ -40,7 +40,7 @@ public class HealthReportService {
         }
 
         lastCheck = Instant.now();
-        config.set("last_check_ms", lastCheck.toEpochMilli());
+        config.set("health_report.last_check_ms", lastCheck.toEpochMilli());
         try {
             config.save(file);
         } catch (IOException e) {

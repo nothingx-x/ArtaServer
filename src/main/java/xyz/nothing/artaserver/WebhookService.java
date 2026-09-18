@@ -106,16 +106,25 @@ public class WebhookService {
     }
 
     private void sendRequestAsync(Request requestData) {
+        String json = requestData.toJSONString();
         List<CompletableFuture<HttpResponse<Void>>> futures = new ArrayList<>();
         for (String webhook : webhooks) {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(webhook))
-                    .POST(HttpRequest.BodyPublishers.ofString(requestData.toJSONString()))
+                    .POST(HttpRequest.BodyPublishers.ofString(json))
                     .setHeader("Content-type", "application/json")
                     .build();
-            futures.add(client.sendAsync(request, HttpResponse.BodyHandlers.discarding()));
+            futures.add(client.sendAsync(request, HttpResponse.BodyHandlers.discarding())
+                    .exceptionally(ex -> {
+                        ArtaPlugin.getInstance().getLogger().severe("Failed to send webhook to " + webhook + ": " + ex.getMessage());
+                        return null;
+                    }));
         }
-        CompletableFuture.allOf(futures.toArray(new CompletableFuture[]{}));
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[]{}))
+                .exceptionally(ex -> {
+                    ArtaPlugin.getInstance().getLogger().severe("One or more webhook requests failed: " + ex.getMessage());
+                    return null;
+                });
     }
 
     private void sendRequest(Request requestData) {
@@ -151,11 +160,20 @@ public class WebhookService {
         String toJSONString();
     }
 
+    private static String escapeJson(String s) {
+        if (s == null) return "";
+        return s.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t");
+    }
+
     public record GeneralRequest(String playerName, Action action) implements Request {
 
         @Override
         public String toJSONString() {
-            return String.format("{\"playerName\":\"%s\", \"action\":\"%s\"}", playerName, action);
+            return String.format("{\"playerName\":\"%s\", \"action\":\"%s\"}", escapeJson(playerName), action);
         }
     }
 
@@ -163,7 +181,7 @@ public class WebhookService {
 
         @Override
         public String toJSONString() {
-            return String.format("{\"playerName\":\"%s\", \"action\":\"%s\", \"message\":\"%s\"}", playerName, action, message);
+            return String.format("{\"playerName\":\"%s\", \"action\":\"%s\", \"message\":\"%s\"}", escapeJson(playerName), action, escapeJson(message));
         }
     }
 
@@ -171,7 +189,7 @@ public class WebhookService {
 
         @Override
         public String toJSONString() {
-            return String.format("{\"playerName\":\"%s\", \"action\":\"%s\", \"displayName\":\"%s\", \"level\":%d}", playerName, action, displayName, level);
+            return String.format("{\"playerName\":\"%s\", \"action\":\"%s\", \"displayName\":\"%s\", \"level\":%d}", escapeJson(playerName), action, escapeJson(displayName), level);
         }
     }
 }
