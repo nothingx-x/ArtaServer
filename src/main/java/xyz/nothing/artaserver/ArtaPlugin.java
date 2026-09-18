@@ -11,6 +11,7 @@ import java.util.List;
 
 public class ArtaPlugin extends JavaPlugin {
     private WebhookService webhookService;
+    private HealthReportService healthReportService;
     private static boolean debug;
     private static ArtaPlugin instance;
 
@@ -18,23 +19,28 @@ public class ArtaPlugin extends JavaPlugin {
     public void onEnable() {
         instance = this;
         saveDefaultConfig();
+        saveResource("health_report.yml", false);
 
         List<String> webhooks = getConfig().getStringList("config.webhooks");
         debug = getConfig().getBoolean("config.debug");
 
         webhookService = new WebhookService(webhooks);
+        healthReportService = new HealthReportService();
         getServer().getPluginManager().registerEvents(new PlayerListener(webhookService), this);
         if (isAuraSkillEnabled()) {
             getServer().getPluginManager().registerEvents(new AuraListener(webhookService), this);
         }
 
         webhookService.notifyStartStop(false);
+        healthReportService.init();
+        getServer().getScheduler().scheduleSyncRepeatingTask(this, healthReportService::run, 0L, 1 * 60 * 20);
         getComponentLogger().info(Component.text("ArtaPlugin enabled!"));
     }
 
     @Override
     public void onDisable() {
         webhookService.notifyStartStop(true);
+        healthReportService.stop();
         getComponentLogger().info(Component.text("ArtaPlugin disabled!"));
     }
 

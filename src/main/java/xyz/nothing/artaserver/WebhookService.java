@@ -8,6 +8,7 @@ import org.bukkit.event.Event;
 import org.bukkit.event.player.PlayerEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import xyz.nothing.artaserver.event.HealthReportEvent;
 
 import java.io.IOException;
 import java.net.URI;
@@ -19,6 +20,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 public class WebhookService {
@@ -49,6 +51,32 @@ public class WebhookService {
         if (ArtaPlugin.isDebug()) {
             ArtaPlugin.getInstance().getLogger().info("notifyPlayerEvent player: " + request.playerName() + ", action: " + request.action());
         }
+
+        sendRequestAsync(request);
+    }
+
+    public void notifyEvent(Event event) {
+        Request request;
+        if (!(event instanceof HealthReportEvent e)) {
+            return;
+        }
+
+        String message = "";
+        StringBuilder builder = new StringBuilder();
+        builder.append("Entity/World:");
+        builder.append("\n");
+        for (Map.Entry<String,Integer> entity : e.getHealthReport().entities().entrySet()) {
+            builder.append(entity.getKey());
+            builder.append(": ");
+            builder.append(entity.getValue());
+            builder.append("\n");
+        }
+        builder.append("\n\n");
+        builder.append("TPS: ")
+                .append(e.getHealthReport().tps());
+
+        message = builder.toString();
+        request = new ChatRequest("", Action.HEALTH_REPORT, message);
 
         sendRequestAsync(request);
     }
@@ -111,7 +139,8 @@ public class WebhookService {
         START,
         STOP,
         CHAT,
-        AURA_LEVEL_UP
+        AURA_LEVEL_UP,
+        HEALTH_REPORT
     }
 
     public interface Request {

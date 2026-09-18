@@ -38,6 +38,8 @@ export default {
               const level = data.level;
               const displayName = data.displayName;
               return `مهارت ${displayName} به سطح ${level} رسید`;
+            case "HEALTH_REPORT":
+              return data.message;
             default:
               return action || "نامشخص";
           }
@@ -55,6 +57,9 @@ export default {
         }
         else if (action === "AURA_LEVEL_UP") {
           text = `<b>SKILL</b> ${playername}:\n\n${convertActionToPersian(action)}`
+        }
+        else if (action === "HEALTH_REPORT") {
+          text `<b>HEALTH REPORT</b>\n\n${convertActionToPersian(action)}`
         }
         else {
           text = `${playername} ${convertActionToPersian(action)}`;
