@@ -3,6 +3,7 @@ package xyz.nothing.artaserver.service;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -60,6 +61,20 @@ public class ArtaBoxService {
         ARTABOX_EPIC.addItem(Material.BAKED_POTATO.name(), 0.4);
         ARTABOX_EPIC.addItem(Material.NETHER_STAR.name(), 0.1);
 
+        ARTABOX_MYTHIC.addItem(Material.COAL.name(), 0.1);
+        ARTABOX_MYTHIC.addItem(Material.NETHERITE_INGOT.name(), 0.1);
+        ARTABOX_MYTHIC.addItem(Material.CONDUIT.name(), 0.1);
+        ARTABOX_MYTHIC.addItem(Material.ENCHANTED_GOLDEN_APPLE.name(), 0.1);
+        ARTABOX_MYTHIC.addItem(Material.CACTUS_FLOWER.name(), 0.6);
+
+        ARTABOX_LEGENDARY.addItem(Material.NETHERITE_INGOT.name(), 0.2);
+        ARTABOX_LEGENDARY.addItem(Material.VILLAGER_SPAWN_EGG.name(), 0.2);
+        ARTABOX_LEGENDARY.addItem(Material.DIAMOND.name(), 0.2);
+        ARTABOX_LEGENDARY.addItem(Material.ELYTRA.name(), 0.1);
+        ARTABOX_LEGENDARY.addItem(Material.DRAGON_HEAD.name(), 0.1);
+        ARTABOX_LEGENDARY.addItem(Material.DRAGON_EGG.name(), 0.1);
+        ARTABOX_LEGENDARY.addItem(Material.BOLT_ARMOR_TRIM_SMITHING_TEMPLATE.name(), 0.1);
+
         ARTA_BOXES = Set.of(ARTABOX_RARE, ARTABOX_EPIC, ARTABOX_MYTHIC, ARTABOX_LEGENDARY);
     }
 
@@ -88,13 +103,19 @@ public class ArtaBoxService {
             data.openedDaily = config.getInt(key + ".openedDaily", 0);
             data.lastOpened = Instant.ofEpochMilli(last);
             data.resetsAt = Instant.ofEpochMilli(reset);
+            ConfigurationSection openedBoxes = config.getConfigurationSection(key + ".openedBoxes");
+            if (openedBoxes != null) {
+                for (String boxId : openedBoxes.getKeys(false)) {
+                    data.openedBoxes.put(boxId, openedBoxes.getInt(boxId, 0));
+                }
+            }
             playerOpenedBoxesMap.put(uuid, data);
         }
     }
 
     /**
-     * Persists every tracked player and prunes records that no longer matter. Safe to call
-     * from the main thread; also used to flush state on plugin shutdown.
+     * Persists every tracked player and prunes records that no longer matter. Called on the
+     * main thread after each successful open.
      */
     private void save() {
         Instant now = Instant.now();
@@ -115,9 +136,13 @@ public class ArtaBoxService {
 
         for (Map.Entry<UUID, PlayerOpenedBoxes> entry : playerOpenedBoxesMap.entrySet()) {
             String path = entry.getKey().toString();
-            config.set(path + ".openedDaily", entry.getValue().openedDaily);
-            config.set(path + ".lastOpened", entry.getValue().lastOpened.toEpochMilli());
-            config.set(path + ".resetsAt", entry.getValue().resetsAt.toEpochMilli());
+            PlayerOpenedBoxes data = entry.getValue();
+            config.set(path + ".openedDaily", data.openedDaily);
+            config.set(path + ".lastOpened", data.lastOpened.toEpochMilli());
+            config.set(path + ".resetsAt", data.resetsAt.toEpochMilli());
+            for (Map.Entry<String, Integer> openedBox : data.openedBoxes.entrySet()) {
+                config.set(path + ".openedBoxes." + openedBox.getKey(), openedBox.getValue());
+            }
         }
 
         try {
@@ -130,16 +155,21 @@ public class ArtaBoxService {
         }
     }
 
+    /**
+     * Reports whether the player may open a box right now, without consuming one. Applies the
+     * lazy window reset, so it is safe to call before an animation or other delay.
+     */
+    public boolean hasAvailableBox(Player player) {
+        PlayerOpenedBoxes data = playerOpenedBoxesMap.computeIfAbsent(player.getUniqueId(), PlayerOpenedBoxes::new);
+        return data.hasAvailableBox(Instant.now());
+    }
+
     public OpenResult openBox(Player player) {
         PlayerOpenedBoxes playerOpenedBoxes = playerOpenedBoxesMap.computeIfAbsent(player.getUniqueId(), PlayerOpenedBoxes::new);
 
-        Duration elapsed = Duration.between(playerOpenedBoxes.resetsAt, Instant.now());
-
-        if (elapsed.toMillis() < DAY.toMillis() && playerOpenedBoxes.openedDaily >= MAX_BOX_PER_DAY) {
+        Instant now = Instant.now();
+        if (!playerOpenedBoxes.hasAvailableBox(now)) {
             return OpenResult.REACHED_MAX_BOX_OPENED;
-        } else if (elapsed.toMillis() >= DAY.toMillis()) {
-            playerOpenedBoxes.openedDaily = 0;
-            playerOpenedBoxes.resetsAt = Instant.now().plus(DAY);
         }
 
         double chance = r.nextDouble();
@@ -163,10 +193,12 @@ public class ArtaBoxService {
 
         if (box.isEmpty()) return OpenResult.UNKNOWN_FAILURE;
 
+        ArtaBox artaBox = box.get();
+
         double itemChance = r.nextDouble();
         double cumulativeItem = 0;
         Optional<String> itemId = Optional.empty();
-        for (Map.Entry<String, Double> entry : box.get().getItemChances().entrySet()) {
+        for (Map.Entry<String, Double> entry : artaBox.getItemChances().entrySet()) {
             cumulativeItem += entry.getValue();
 
             if (itemChance < cumulativeItem) {
@@ -189,10 +221,11 @@ public class ArtaBoxService {
         }
 
         playerOpenedBoxes.openedDaily = Math.min(MAX_BOX_PER_DAY, playerOpenedBoxes.openedDaily + 1);
-        playerOpenedBoxes.lastOpened = Instant.now();
+        playerOpenedBoxes.openedBoxes.merge(artaBox.getId(), 1, Integer::sum);
+        playerOpenedBoxes.lastOpened = now;
         save();
 
-        Bukkit.getServer().getPluginManager().callEvent(new ArtaBoxResultEvent(player, box.get(), item));
+        Bukkit.getServer().getPluginManager().callEvent(new ArtaBoxResultEvent(player, artaBox, item));
         return OpenResult.SUCCESS;
     }
 
@@ -213,6 +246,19 @@ public class ArtaBoxService {
             this.uuid = uuid;
             this.lastOpened = Instant.now();
             this.resetsAt = Instant.now().plus(DAY);
+        }
+
+        /**
+         * Starts a new window when the current one has expired and reports whether a box is
+         * available. Does not consume a box; the caller increments {@code openedDaily} once the
+         * open succeeds.
+         */
+        public boolean hasAvailableBox(Instant now) {
+            if (!now.isBefore(resetsAt)) {
+                openedDaily = 0;
+                resetsAt = now.plus(DAY);
+            }
+            return openedDaily < MAX_BOX_PER_DAY;
         }
 
         public UUID getUuid() {

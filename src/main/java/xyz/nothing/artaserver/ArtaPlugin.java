@@ -4,8 +4,11 @@ package xyz.nothing.artaserver;
 import net.kyori.adventure.text.Component;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
+import xyz.nothing.artaserver.cmd.ArtaBoxCommand;
+import xyz.nothing.artaserver.listener.ArtaBoxListener;
 import xyz.nothing.artaserver.listener.AuraListener;
 import xyz.nothing.artaserver.listener.PlayerListener;
+import xyz.nothing.artaserver.service.ArtaBoxService;
 import xyz.nothing.artaserver.service.HealthReportService;
 import xyz.nothing.artaserver.service.WebhookService;
 
@@ -14,6 +17,7 @@ import java.util.List;
 public class ArtaPlugin extends JavaPlugin {
     private WebhookService webhookService;
     private HealthReportService healthReportService;
+    private ArtaBoxService artaBoxService;
     private static boolean debug;
     private static ArtaPlugin instance;
 
@@ -22,6 +26,7 @@ public class ArtaPlugin extends JavaPlugin {
         instance = this;
         saveDefaultConfig();
         saveResource("health_report.yml", false);
+        saveResource("boxes.yml", false);
 
         List<String> webhooks = getConfig().getStringList("config.webhooks");
         debug = getConfig().getBoolean("config.debug");
@@ -29,6 +34,7 @@ public class ArtaPlugin extends JavaPlugin {
         webhookService = new WebhookService(webhooks);
         healthReportService = new HealthReportService();
         getServer().getPluginManager().registerEvents(new PlayerListener(webhookService), this);
+        getServer().getPluginManager().registerEvents(new ArtaBoxListener(), this);
         if (isAuraSkillEnabled()) {
             getServer().getPluginManager().registerEvents(new AuraListener(webhookService), this);
         }
@@ -37,6 +43,9 @@ public class ArtaPlugin extends JavaPlugin {
         healthReportService.init();
         getServer().getScheduler().scheduleSyncRepeatingTask(this, healthReportService::run, 1 * 60 * 20L, 1 * 60 * 20);
         getComponentLogger().info(Component.text("ArtaPlugin enabled!"));
+
+        artaBoxService = new ArtaBoxService();
+        registerCommand("artabox", new ArtaBoxCommand(artaBoxService));
     }
 
     @Override

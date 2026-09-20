@@ -33,7 +33,7 @@ public class ArtaBoxResultEvent extends PlayerEvent {
         return HANDLERS;
     }
 
-    public static HandlerList getHandlersList() {
+    public static HandlerList getHandlerList() {
         return HANDLERS;
     }
 }
