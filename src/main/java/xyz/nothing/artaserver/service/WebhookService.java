@@ -9,6 +9,7 @@ import org.bukkit.event.player.PlayerEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import xyz.nothing.artaserver.ArtaPlugin;
+import xyz.nothing.artaserver.event.ArtaBoxResultEvent;
 import xyz.nothing.artaserver.event.HealthReportEvent;
 
 import java.io.IOException;
@@ -97,6 +98,21 @@ public class WebhookService {
         sendRequestAsync(request);
     }
 
+    public void notifyArtaBox(Event event) {
+        Request request;
+        if (event instanceof ArtaBoxResultEvent e) {
+            request = new ArtaBoxRequest(
+                    e.getPlayer().getName(),
+                    Action.ARTA_BOX_OPEN,
+                    e.getArtaBox().getDisplayName(),
+                    e.getItem().name());
+        } else {
+            return;
+        }
+
+        sendRequestAsync(request);
+    }
+
     public void notifyStartStop(boolean isStopped) {
         if (isStopped) {
             // if stop is true, it means that plugin is disabled. in this case request will be sent synchronously
@@ -150,7 +166,8 @@ public class WebhookService {
         STOP,
         CHAT,
         AURA_LEVEL_UP,
-        HEALTH_REPORT
+        HEALTH_REPORT,
+        ARTA_BOX_OPEN
     }
 
     public interface Request {
@@ -191,6 +208,14 @@ public class WebhookService {
         @Override
         public String toJSONString() {
             return String.format("{\"playerName\":\"%s\", \"action\":\"%s\", \"displayName\":\"%s\", \"level\":%d}", escapeJson(playerName), action, escapeJson(displayName), level);
+        }
+    }
+
+    public record ArtaBoxRequest(String playerName, Action action, String box, String item) implements Request {
+
+        @Override
+        public String toJSONString() {
+            return String.format("{\"playerName\":\"%s\", \"action\":\"%s\", \"box\":\"%s\", \"item\":\"%s\"}", escapeJson(playerName), action, escapeJson(box), escapeJson(item));
         }
     }
 }

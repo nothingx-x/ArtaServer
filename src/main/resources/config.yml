@@ -8,5 +8,11 @@ config:
   # list of currently supported actions:
   # join
   # quit
+  # start
+  # stop
+  # chat
+  # aura_level_up
+  # health_report
+  # artabox_open
   webhooks:
     - "http://localhost:8080/webhook"

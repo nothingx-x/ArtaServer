@@ -40,6 +40,8 @@ export default {
               return `مهارت ${displayName} به سطح ${level} رسید`;
             case "HEALTH_REPORT":
               return data.message;
+            case "ARTA_BOX_OPEN":
+              return `${escapeHtml(data.box)} را باز کرد و برنده شد: ${escapeHtml(data.item)}`;
             default:
               return action || "نامشخص";
           }
@@ -57,6 +59,9 @@ export default {
         }
         else if (action === "AURA_LEVEL_UP") {
           text = `<b>SKILL</b> ${playername}:\n\n${convertActionToPersian(action)}`
+        }
+        else if (action === "ARTA_BOX_OPEN") {
+          text = `<b>ARTA BOX</b> ${playername}:\n\n${convertActionToPersian(action)}`
         }
         else if (!playername) {
           text = convertActionToPersian(action)

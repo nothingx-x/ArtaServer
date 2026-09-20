@@ -34,7 +34,7 @@ public class ArtaPlugin extends JavaPlugin {
         webhookService = new WebhookService(webhooks);
         healthReportService = new HealthReportService();
         getServer().getPluginManager().registerEvents(new PlayerListener(webhookService), this);
-        getServer().getPluginManager().registerEvents(new ArtaBoxListener(), this);
+        getServer().getPluginManager().registerEvents(new ArtaBoxListener(webhookService), this);
         if (isAuraSkillEnabled()) {
             getServer().getPluginManager().registerEvents(new AuraListener(webhookService), this);
         }

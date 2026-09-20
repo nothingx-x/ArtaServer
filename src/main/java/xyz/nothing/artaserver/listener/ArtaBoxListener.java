@@ -9,8 +9,14 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 import xyz.nothing.artaserver.event.ArtaBoxResultEvent;
+import xyz.nothing.artaserver.service.WebhookService;
 
 public class ArtaBoxListener implements Listener {
+    private final WebhookService webhookService;
+
+    public ArtaBoxListener(WebhookService webhookService) {
+        this.webhookService = webhookService;
+    }
 
     @EventHandler
     public void onArtaBoxResult(ArtaBoxResultEvent event) {
@@ -31,5 +37,7 @@ public class ArtaBoxListener implements Listener {
                 .append(Component.translatable(item.translationKey())));
 
         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
+
+        webhookService.notifyArtaBox(event);
     }
 }
