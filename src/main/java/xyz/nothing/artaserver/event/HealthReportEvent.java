@@ -3,7 +3,7 @@ package xyz.nothing.artaserver.event;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
-import xyz.nothing.artaserver.HealthReportService;
+import xyz.nothing.artaserver.service.HealthReportService;
 
 public class HealthReportEvent extends Event {
     private static final HandlerList HANDLERS = new HandlerList();

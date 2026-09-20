@@ -1,4 +1,4 @@
-package xyz.nothing.artaserver;
+package xyz.nothing.artaserver.service;
 
 
 import dev.aurelium.auraskills.api.event.skill.SkillLevelUpEvent;
@@ -8,6 +8,7 @@ import org.bukkit.event.Event;
 import org.bukkit.event.player.PlayerEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import xyz.nothing.artaserver.ArtaPlugin;
 import xyz.nothing.artaserver.event.HealthReportEvent;
 
 import java.io.IOException;

@@ -1,10 +1,11 @@
-package xyz.nothing.artaserver;
+package xyz.nothing.artaserver.service;
 
 
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import xyz.nothing.artaserver.ArtaPlugin;
 import xyz.nothing.artaserver.event.HealthReportEvent;
 
 import java.io.File;

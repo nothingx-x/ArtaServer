@@ -6,6 +6,8 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import xyz.nothing.artaserver.listener.AuraListener;
 import xyz.nothing.artaserver.listener.PlayerListener;
+import xyz.nothing.artaserver.service.HealthReportService;
+import xyz.nothing.artaserver.service.WebhookService;
 
 import java.util.List;
 

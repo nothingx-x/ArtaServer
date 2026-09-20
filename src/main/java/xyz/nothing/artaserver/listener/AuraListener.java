@@ -4,7 +4,7 @@ package xyz.nothing.artaserver.listener;
 import dev.aurelium.auraskills.api.event.skill.SkillLevelUpEvent;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import xyz.nothing.artaserver.WebhookService;
+import xyz.nothing.artaserver.service.WebhookService;
 
 public class AuraListener implements Listener {
     private final WebhookService webhookService;
