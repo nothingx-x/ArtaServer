@@ -25,9 +25,14 @@ public class ArtaBoxService {
     private static final ArtaBox ARTABOX_MYTHIC = new ArtaBox("artabox_mythic", "آرتا باکس میتیک", ArtaBox.Rarity.MYTHIC);
     private static final ArtaBox ARTABOX_LEGENDARY = new ArtaBox("artabox_legendary", "آرتا باکس لجندری", ArtaBox.Rarity.LEGENDARY);
     public static final Set<ArtaBox> ARTA_BOXES;
-    public static Map<ArtaBox.Rarity, Double> CHANCE_PER_RARITY;
+    public static final Map<ArtaBox.Rarity, Double> CHANCE_PER_RARITY;
 
     private static final Duration DAY = Duration.ofDays(1);
+    /**
+     * Records unused for longer than this are dropped from boxes.yml. A player's daily
+     * counter is only meaningful for 24 hours, so anything beyond this is dead weight.
+     */
+    private static final Duration STALE_RECORD_RETENTION = Duration.ofDays(30);
     public static final int MAX_BOX_PER_DAY = 4;
 
     private final SecureRandom r = new SecureRandom();
@@ -63,30 +68,63 @@ public class ArtaBoxService {
         load();
     }
 
+    private static UUID parseUuid(String key) {
+        try {
+            return UUID.fromString(key);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
     private void load() {
         for (String key : config.getKeys(false)) {
-            UUID uuid;
-            try {
-                uuid = UUID.fromString(key);
-            } catch (IllegalArgumentException e) {
+            UUID uuid = parseUuid(key);
+            if (uuid == null) {
                 continue;
             }
             PlayerOpenedBoxes data = new PlayerOpenedBoxes(uuid);
-            data.openedDaily = config.getInt(key + ".openedDaily", 0);
             long last = config.getLong(key + ".lastOpened", System.currentTimeMillis());
+            long reset = config.getLong(key + ".resetsAt", System.currentTimeMillis());
+            data.openedDaily = config.getInt(key + ".openedDaily", 0);
             data.lastOpened = Instant.ofEpochMilli(last);
+            data.resetsAt = Instant.ofEpochMilli(reset);
             playerOpenedBoxesMap.put(uuid, data);
         }
     }
 
+    /**
+     * Persists every tracked player and prunes records that no longer matter. Safe to call
+     * from the main thread; also used to flush state on plugin shutdown.
+     */
     private void save() {
+        Instant now = Instant.now();
+
+        playerOpenedBoxesMap.entrySet().removeIf(entry ->
+                Duration.between(entry.getValue().lastOpened, now).compareTo(STALE_RECORD_RETENTION) > 0);
+
+        // Remove keys that no longer correspond to a tracked player (pruned above, or
+        // hand-edited/leftover entries that load() refused to parse).
+        int prunedKeys = 0;
+        for (String key : List.copyOf(config.getKeys(false))) {
+            UUID uuid = parseUuid(key);
+            if (uuid != null && !playerOpenedBoxesMap.containsKey(uuid)) {
+                config.set(key, null);
+                prunedKeys++;
+            }
+        }
+
         for (Map.Entry<UUID, PlayerOpenedBoxes> entry : playerOpenedBoxesMap.entrySet()) {
             String path = entry.getKey().toString();
             config.set(path + ".openedDaily", entry.getValue().openedDaily);
-            config.set(path + ".lastOpened", entry.getValue().lastOpened);
+            config.set(path + ".lastOpened", entry.getValue().lastOpened.toEpochMilli());
+            config.set(path + ".resetsAt", entry.getValue().resetsAt.toEpochMilli());
         }
+
         try {
             config.save(file);
+            if (prunedKeys > 0 && ArtaPlugin.isDebug()) {
+                ArtaPlugin.getInstance().getLogger().info("Pruned " + prunedKeys + " stale record(s) from boxes.yml");
+            }
         } catch (IOException e) {
             ArtaPlugin.getInstance().getLogger().log(Level.SEVERE, "Failed to save boxes.yml", e);
         }
@@ -95,12 +133,13 @@ public class ArtaBoxService {
     public OpenResult openBox(Player player) {
         PlayerOpenedBoxes playerOpenedBoxes = playerOpenedBoxesMap.computeIfAbsent(player.getUniqueId(), PlayerOpenedBoxes::new);
 
-        Duration elapsed = Duration.between(playerOpenedBoxes.lastOpened, Instant.now());
+        Duration elapsed = Duration.between(playerOpenedBoxes.resetsAt, Instant.now());
 
         if (elapsed.toMillis() < DAY.toMillis() && playerOpenedBoxes.openedDaily >= MAX_BOX_PER_DAY) {
             return OpenResult.REACHED_MAX_BOX_OPENED;
         } else if (elapsed.toMillis() >= DAY.toMillis()) {
             playerOpenedBoxes.openedDaily = 0;
+            playerOpenedBoxes.resetsAt = Instant.now().plus(DAY);
         }
 
         double chance = r.nextDouble();
@@ -139,7 +178,15 @@ public class ArtaBoxService {
 
         if (itemId.isEmpty()) return OpenResult.UNKNOWN_FAILURE;
 
-        Material item = Material.valueOf(itemId.get());
+        Material item;
+        try {
+            item = Material.valueOf(itemId.get());
+        } catch (IllegalArgumentException e) {
+            if (ArtaPlugin.isDebug()) {
+                ArtaPlugin.getInstance().getLogger().log(Level.WARNING, "Failed to find art item " + itemId.get(), e);
+            }
+            return OpenResult.UNKNOWN_FAILURE;
+        }
 
         playerOpenedBoxes.openedDaily = Math.min(MAX_BOX_PER_DAY, playerOpenedBoxes.openedDaily + 1);
         playerOpenedBoxes.lastOpened = Instant.now();
@@ -157,21 +204,47 @@ public class ArtaBoxService {
 
     public static class PlayerOpenedBoxes {
         private final UUID uuid;
-        private final Map<String, BoxResult> openedBoxes = new HashMap<>();
+        private final Map<String, Integer> openedBoxes = new LinkedHashMap<>();
         private int openedDaily;
         private Instant lastOpened;
+        private Instant resetsAt;
 
         public PlayerOpenedBoxes(UUID uuid) {
             this.uuid = uuid;
             this.lastOpened = Instant.now();
+            this.resetsAt = Instant.now().plus(DAY);
         }
 
         public UUID getUuid() {
             return uuid;
         }
 
-        public record BoxResult(String wonItem, int amountOfOpenedBoxes) {
+        public Map<String, Integer> getOpenedBoxes() {
+            return openedBoxes;
+        }
 
+        public int getOpenedDaily() {
+            return openedDaily;
+        }
+
+        public Instant getLastOpened() {
+            return lastOpened;
+        }
+
+        public Instant getResetsAt() {
+            return resetsAt;
+        }
+
+        public void setOpenedDaily(int openedDaily) {
+            this.openedDaily = openedDaily;
+        }
+
+        public void setLastOpened(Instant lastOpened) {
+            this.lastOpened = lastOpened;
+        }
+
+        public void setResetsAt(Instant resetsAt) {
+            this.resetsAt = resetsAt;
         }
     }
 
