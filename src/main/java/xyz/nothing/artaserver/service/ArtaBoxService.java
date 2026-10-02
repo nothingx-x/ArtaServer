@@ -25,6 +25,8 @@ public class ArtaBoxService {
     private static final ArtaBox ARTABOX_EPIC = new ArtaBox("artabox_epic", "آرتا باکس اپیک", ArtaBox.Rarity.EPIC);
     private static final ArtaBox ARTABOX_MYTHIC = new ArtaBox("artabox_mythic", "آرتا باکس میتیک", ArtaBox.Rarity.MYTHIC);
     private static final ArtaBox ARTABOX_LEGENDARY = new ArtaBox("artabox_legendary", "آرتا باکس لجندری", ArtaBox.Rarity.LEGENDARY);
+    private static final ArtaBox ARTABOX_CHROMATIC = new ArtaBox("artabox_chromatic", "آرتا باکس کروماتیک", ArtaBox.Rarity.CHROMATIC);
+
     public static final Set<ArtaBox> ARTA_BOXES;
     public static final Map<ArtaBox.Rarity, Double> CHANCE_PER_RARITY;
 
@@ -46,7 +48,9 @@ public class ArtaBoxService {
         m.put(ArtaBox.Rarity.RARE, 0.6);
         m.put(ArtaBox.Rarity.EPIC, 0.2);
         m.put(ArtaBox.Rarity.MYTHIC, 0.15);
-        m.put(ArtaBox.Rarity.LEGENDARY, 0.05);
+        m.put(ArtaBox.Rarity.LEGENDARY, 0.04);
+        m.put(ArtaBox.Rarity.CHROMATIC, 0.01);
+
         CHANCE_PER_RARITY = Collections.unmodifiableMap(m);
 
         ARTABOX_RARE.addItem(Material.BREAD.name(), 0.5);
@@ -75,7 +79,13 @@ public class ArtaBoxService {
         ARTABOX_LEGENDARY.addItem(Material.DRAGON_EGG.name(), 0.1);
         ARTABOX_LEGENDARY.addItem(Material.BOLT_ARMOR_TRIM_SMITHING_TEMPLATE.name(), 0.1);
 
-        ARTA_BOXES = Set.of(ARTABOX_RARE, ARTABOX_EPIC, ARTABOX_MYTHIC, ARTABOX_LEGENDARY);
+        ARTABOX_CHROMATIC.addItem(Material.IRON_BLOCK.name(), 0.4);
+        ARTABOX_CHROMATIC.addItem(Material.DIAMOND_BLOCK.name(), 0.2);
+        ARTABOX_CHROMATIC.addItem(Material.COPPER_BLOCK.name(), 0.2);
+        ARTABOX_CHROMATIC.addItem(Material.LAPIS_BLOCK.name(), 0.1);
+        ARTABOX_CHROMATIC.addItem(Material.NETHERITE_BLOCK.name(), 0.1);
+
+        ARTA_BOXES = Set.of(ARTABOX_RARE, ARTABOX_EPIC, ARTABOX_MYTHIC, ARTABOX_LEGENDARY, ARTABOX_CHROMATIC);
     }
 
     public ArtaBoxService() {
@@ -339,7 +349,8 @@ public class ArtaBoxService {
             RARE,
             EPIC,
             MYTHIC,
-            LEGENDARY
+            LEGENDARY,
+            CHROMATIC
         }
     }
 }
