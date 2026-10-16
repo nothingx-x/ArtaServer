@@ -6,3 +6,9 @@ main: "xyz.nothing.artaserver.ArtaPlugin"
 loader: "xyz.nothing.artaserver.ArtaPluginLoader"
 authors:
   - nothingx-x
+dependencies:
+  server:
+    AuraSkills:
+      required: false
+      join-classpath: true
+      load: BEFORE

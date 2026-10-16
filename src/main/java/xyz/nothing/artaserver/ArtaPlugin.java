@@ -2,36 +2,19 @@ package xyz.nothing.artaserver;
 
 
 import net.kyori.adventure.text.Component;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
-import xyz.nothing.artaserver.command.DailyCommand;
-import xyz.nothing.artaserver.command.JobCommand;
-import xyz.nothing.artaserver.db.DatabaseManager;
-import xyz.nothing.artaserver.listener.farmer.FarmerEffects;
-import xyz.nothing.artaserver.listener.warrior.WarriorEffects;
-import xyz.nothing.artaserver.listener.smithman.SmithmanEffects;
-import xyz.nothing.artaserver.job.JobListenerScanner;
-import xyz.nothing.artaserver.job.JobManager;
-import xyz.nothing.artaserver.listener.farmer.FarmerListener;
-import xyz.nothing.artaserver.listener.BreedingListener;
-import xyz.nothing.artaserver.listener.NightDamageListener;
-import xyz.nothing.artaserver.listener.NightSpawnListener;
-import xyz.nothing.artaserver.listener.JobLockListener;
-import xyz.nothing.artaserver.listener.VillagerTradeListener;
-import xyz.nothing.artaserver.listener.smithman.SmithmanListener;
-import xyz.nothing.artaserver.listener.warrior.WarriorListener;
 import xyz.nothing.artaserver.listener.PlayerListener;
+import xyz.nothing.artaserver.service.ArtaBoxService;
+import xyz.nothing.artaserver.service.HealthReportService;
+import xyz.nothing.artaserver.service.WebhookService;
 
 import java.sql.SQLException;
 import java.util.List;
 
 public class ArtaPlugin extends JavaPlugin {
     private WebhookService webhookService;
+    private HealthReportService healthReportService;
+    private ArtaBoxService artaBoxService;
     private static boolean debug;
     private static ArtaPlugin instance;
     private JobManager jobManager;
@@ -40,52 +23,34 @@ public class ArtaPlugin extends JavaPlugin {
     public void onEnable() {
         instance = this;
         saveDefaultConfig();
+        saveResource("health_report.yml", false);
+        saveResource("boxes.yml", false);
+
         List<String> webhooks = getConfig().getStringList("config.webhooks");
         debug = getConfig().getBoolean("config.debug");
-
-        try {
-            DatabaseManager.getInstance().init();
-        } catch (SQLException e) {
-            getLogger().severe("Could not initialize database: " + e.getMessage());
-            getServer().getPluginManager().disablePlugin(this);
-            return;
-        }
-
         webhookService = new WebhookService(webhooks);
-        jobManager = JobManager.getInstance();
-        DailyManager dailyManager = new DailyManager(jobManager);
-
-        // commands
-        registerCommand("job", "Choose your job", "/job pick <job>", new JobCommand(jobManager));
-        registerCommand("daily", "Claim your daily reward", "/daily", new DailyCommand(dailyManager));
-
-        // listeners
         getServer().getPluginManager().registerEvents(new PlayerListener(webhookService), this);
-        getServer().getPluginManager().registerEvents(new FarmerListener(jobManager), this);
-        getServer().getPluginManager().registerEvents(new WarriorListener(jobManager), this);
-        getServer().getPluginManager().registerEvents(new SmithmanListener(jobManager), this);
-        getServer().getPluginManager().registerEvents(new NightSpawnListener(), this);
-        getServer().getPluginManager().registerEvents(new NightDamageListener(), this);
-        getServer().getPluginManager().registerEvents(new VillagerTradeListener(), this);
-        getServer().getPluginManager().registerEvents(new JobLockListener(), this);
-
-        double breedingCancelChance = getConfig().getDouble("config.breeding-cancel-chance", 0.2);
-        getServer().getPluginManager().registerEvents(new BreedingListener(breedingCancelChance), this);
-
-        // Scan @OnJob annotated methods and register as listeners
-        JobListenerScanner.scan(this, new FarmerEffects(), jobManager);
-        JobListenerScanner.scan(this, new WarriorEffects(), jobManager);
-        JobListenerScanner.scan(this, new SmithmanEffects(), jobManager);
 
         webhookService.notifyStartStop(false);
+        healthReportService.init();
+        getServer().getScheduler().scheduleSyncRepeatingTask(this, healthReportService::run, 1 * 60 * 20L, 1 * 60 * 20);
         getComponentLogger().info(Component.text("ArtaPlugin enabled!"));
+
+        artaBoxService = new ArtaBoxService();
+        registerCommand("artabox", new ArtaBoxCommand(artaBoxService));
     }
 
     @Override
     public void onDisable() {
         DatabaseManager.getInstance().close();
         webhookService.notifyStartStop(true);
+        healthReportService.stop();
         getComponentLogger().info(Component.text("ArtaPlugin disabled!"));
+    }
+
+    public boolean isAuraSkillEnabled() {
+        Plugin plugin = getServer().getPluginManager().getPlugin("AuraSkills");
+        return plugin != null && plugin.isEnabled();
     }
 
     public static boolean isDebug() {

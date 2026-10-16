@@ -1,23 +1,11 @@
 package xyz.nothing.artaserver.listener;
 
 
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import xyz.nothing.artaserver.ArtaPlugin;
 import xyz.nothing.artaserver.WebhookService;
-import xyz.nothing.artaserver.job.JobManager;
-import xyz.nothing.artaserver.util.SafeLocationFinder;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class PlayerListener implements Listener {
     private final WebhookService webhookService;
@@ -86,5 +74,15 @@ public class PlayerListener implements Listener {
     public void onQuit(PlayerQuitEvent event) {
         webhookService.notifyPlayerEvent(event);
         JobManager.getInstance().unloadPlayer(event.getPlayer().getUniqueId());
+    }
+
+    @EventHandler
+    public void onChat(AsyncChatEvent event) {
+        webhookService.notifyPlayerEvent(event);
+    }
+
+    @EventHandler
+    public void onHealthReport(HealthReportEvent event) {
+        webhookService.notifyEvent(event);
     }
 }
