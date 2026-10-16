@@ -4,7 +4,7 @@ on:
     branches: [ master ]
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: build-${{ github.ref }}
@@ -34,3 +34,8 @@ jobs:
           name: 'ArtaServer'
           path: 'build/libs/*.jar'
           if-no-files-found: 'error'
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: 'build/libs/*.jar'

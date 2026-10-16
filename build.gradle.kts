@@ -1,15 +1,28 @@
 plugins {
     id("java")
     id("io.papermc.paperweight.userdev") version "2.0.0-beta.19"
-    id("io.github.gmazzo.gitversion") version "1.5.1"
 }
 
-gitVersion {
-    tagPrefix = "v"
-    initialVersion = "0.1" // Optional fallback
+// Strip the "v" prefix and rewrite git describe output into a semver-ish string
+val gitVersion: String = providers.exec {
+    commandLine("git", "describe", "--tags", "--always", "--match", "v*")
+}.standardOutput.asText.get().trim().let { raw ->
+    // raw is like: v1.0-1-g3f756ed  or  v1.0  or  v1.0-dirty
+    when {
+        raw.startsWith("fatal:") -> "0.1.0-SNAPSHOT"
+        else -> raw
+            .removePrefix("v")
+            .removeSuffix("-dirty")       // ignore dirty state
+            .replace(Regex("-\\d+-g[0-9a-f]+$"), "-SNAPSHOT")
+    }
 }
+
+val shortHash: String = providers.exec {
+    commandLine("git", "rev-parse", "--short", "HEAD")
+}.standardOutput.asText.get().trim()
 
 group = "xyz.nothing.artaserver"
+version = "$gitVersion+$shortHash"
 
 repositories {
     mavenCentral()
@@ -25,6 +38,12 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+tasks.register("printGitVersion") {
+    doLast {
+        println("version      = ${project.version}")
+    }
 }
 
 java {
