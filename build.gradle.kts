@@ -1,6 +1,12 @@
 plugins {
     id("java")
     id("io.papermc.paperweight.userdev") version "2.0.0-beta.19"
+    id("io.github.gmazzo.gitversion") version "1.5.0"
+}
+
+gitVersion {
+    tagPrefix = "v"
+     initialVersion = "0.1" // Optional fallback
 }
 
 group = "xyz.nothing.artaserver"
