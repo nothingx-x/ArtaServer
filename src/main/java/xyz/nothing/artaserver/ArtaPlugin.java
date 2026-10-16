@@ -2,7 +2,15 @@ package xyz.nothing.artaserver;
 
 
 import net.kyori.adventure.text.Component;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.jetbrains.annotations.Nullable;
+import xyz.nothing.artaserver.cmd.ArtaBoxCommand;
 import xyz.nothing.artaserver.listener.PlayerListener;
 import xyz.nothing.artaserver.service.ArtaBoxService;
 import xyz.nothing.artaserver.service.HealthReportService;
@@ -17,7 +25,6 @@ public class ArtaPlugin extends JavaPlugin {
     private ArtaBoxService artaBoxService;
     private static boolean debug;
     private static ArtaPlugin instance;
-    private JobManager jobManager;
 
     @Override
     public void onEnable() {
@@ -42,7 +49,6 @@ public class ArtaPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        DatabaseManager.getInstance().close();
         webhookService.notifyStartStop(true);
         healthReportService.stop();
         getComponentLogger().info(Component.text("ArtaPlugin disabled!"));
