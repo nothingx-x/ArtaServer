@@ -42,7 +42,7 @@ tasks.test {
 
 tasks.register("printGitVersion") {
     doLast {
-        println("version      = ${project.version}")
+        println("version= ${project.version}")
     }
 }
 
