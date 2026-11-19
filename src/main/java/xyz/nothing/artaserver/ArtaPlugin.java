@@ -37,16 +37,16 @@ public class ArtaPlugin extends JavaPlugin {
 
         webhookService = new WebhookService(webhooks);
         healthReportService = new HealthReportService();
-
-        getServer().getPluginManager().registerEvents(new PlayerListener(webhookService), this);
+        artaBoxService = new ArtaBoxService();
 
         webhookService.notifyStartStop(false);
         healthReportService.init();
-        getServer().getScheduler().scheduleSyncRepeatingTask(this, healthReportService::run, 1 * 60 * 20L, 1 * 60 * 20);
-        getComponentLogger().info(Component.text("ArtaPlugin enabled!"));
 
-        artaBoxService = new ArtaBoxService();
         registerCommand("artabox", new ArtaBoxCommand(artaBoxService));
+
+        getServer().getScheduler().scheduleSyncRepeatingTask(this, healthReportService::run, 1 * 60 * 20L, 1 * 60 * 20);
+        getServer().getPluginManager().registerEvents(new PlayerListener(webhookService), this);
+        getComponentLogger().info(Component.text("ArtaPlugin enabled!"));
 
         if (debug) {
             getServer().getScheduler().runTaskAsynchronously(this, () -> {
@@ -77,23 +77,5 @@ public class ArtaPlugin extends JavaPlugin {
 
     public static ArtaPlugin getInstance() {
         return instance;
-    }
-
-    private void registerCommand(String name, String description, String usage, Object executor) {
-        Command command = new Command(name, description, usage, List.of()) {
-            @Override
-            public boolean execute(@NonNull CommandSender sender, @NonNull String commandLabel, @NonNull String[] args) {
-                return ((CommandExecutor) executor).onCommand(sender, this, commandLabel, args);
-            }
-
-            @Override
-            public java.util.@Nullable List<String> tabComplete(@NonNull CommandSender sender, @NonNull String alias, @NonNull String[] args) {
-                if (executor instanceof TabCompleter tabCompleter) {
-                    return tabCompleter.onTabComplete(sender, this, alias, args);
-                }
-                return super.tabComplete(sender, alias, args);
-            }
-        };
-        getServer().getCommandMap().register("artaserver", command);
     }
 }
