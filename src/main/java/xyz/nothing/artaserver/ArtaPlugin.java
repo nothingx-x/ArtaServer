@@ -13,6 +13,7 @@ import org.jetbrains.annotations.Nullable;
 import xyz.nothing.artaserver.cmd.ArtaBoxCommand;
 import xyz.nothing.artaserver.listener.PlayerListener;
 import xyz.nothing.artaserver.service.ArtaBoxService;
+import xyz.nothing.artaserver.service.CommandRunner;
 import xyz.nothing.artaserver.service.HealthReportService;
 import xyz.nothing.artaserver.service.WebhookService;
 
@@ -45,6 +46,16 @@ public class ArtaPlugin extends JavaPlugin {
 
         artaBoxService = new ArtaBoxService();
         registerCommand("artabox", new ArtaBoxCommand(artaBoxService));
+
+        if (debug) {
+            getServer().getScheduler().runTaskAsynchronously(this, () -> {
+                String result = CommandRunner.run(
+                        15,
+                        "curl", "-I", "--connect-timeout", "10", "https://api.telegram.org"
+                );
+                getLogger().info("Telegram connectivity check:\n" + result);
+            });
+        }
     }
 
     @Override
