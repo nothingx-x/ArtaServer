@@ -36,7 +36,10 @@ public class ArtaPlugin extends JavaPlugin {
 
         List<String> webhooks = getConfig().getStringList("config.webhooks");
         debug = getConfig().getBoolean("config.debug");
+
         webhookService = new WebhookService(webhooks);
+        healthReportService = new HealthReportService();
+
         getServer().getPluginManager().registerEvents(new PlayerListener(webhookService), this);
 
         webhookService.notifyStartStop(false);
