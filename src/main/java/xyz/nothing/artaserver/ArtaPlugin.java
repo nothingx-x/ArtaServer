@@ -12,10 +12,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.nothing.artaserver.cmd.ArtaBoxCommand;
 import xyz.nothing.artaserver.listener.PlayerListener;
-import xyz.nothing.artaserver.service.ArtaBoxService;
-import xyz.nothing.artaserver.service.CommandRunner;
-import xyz.nothing.artaserver.service.HealthReportService;
-import xyz.nothing.artaserver.service.WebhookService;
+import xyz.nothing.artaserver.service.*;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -24,6 +21,7 @@ public class ArtaPlugin extends JavaPlugin {
     private WebhookService webhookService;
     private HealthReportService healthReportService;
     private ArtaBoxService artaBoxService;
+    private NineCraftService nineCraftService;
     private static boolean debug;
     private static ArtaPlugin instance;
 

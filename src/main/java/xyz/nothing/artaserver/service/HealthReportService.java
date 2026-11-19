@@ -56,7 +56,7 @@ public class HealthReportService {
         for (World world : Bukkit.getServer().getWorlds()) {
             entities.put(world.getName(), world.getEntities().size());
         }
-        double tps = Arrays.stream(Bukkit.getServer().getTPS()).average().orElse(0);
+        double tps = Math.round(Arrays.stream(Bukkit.getServer().getTPS()).average().orElse(0));
         HealthReport healthReport = new HealthReport(entities, tps);
 
         ArtaPlugin.getInstance().getServer().getPluginManager().callEvent(new HealthReportEvent(healthReport));
